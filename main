@@ -1,0 +1,91 @@
+/*
+Any live cell with fewer than two live neighbours dies, as if caused by under-population.
+Any live cell with two or three live neighbours lives on to the next generation.
+Any live cell with more than three live neighbours dies, as if by overcrowding.
+Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+0 = DEAD 1 = ALIVE
+*/
+#include <iostream>
+#include <cstdlib>
+#include <fstream>
+using namespace std;
+
+int main()
+{
+	short phase0[100][100];//world
+	short phase1[100][100];//update to the world
+	int seed=0;
+	int generations = 10;
+	short i=0, j=0;
+	short row = 0, col = 0;
+	
+	//initialize world to zero everywhere
+	for (row = 0; row<100; row++){
+		for(col = 0; col<100; col++){
+			phase0[row][col]=0;
+			phase1[row][col]=0;
+		}
+	}
+	
+	//initialize life distribution------------------------------------------
+	cout << "Possible chances to spawn? ";
+	cin >> seed;//number of attempts to spawn life
+	for(i=0; i<=seed; i++){
+		row = rand() % 99;
+		col = rand() % 99;
+		phase0[row][col] =1;//cell becomes alive
+	}
+	
+	//set edge of the world to zero
+	for(i=0; i<100; i++){
+		phase0[0][i]=0;
+		phase0[i][0]=0;
+		phase0[99][i]=0;
+		phase0[i][99]=0;
+	}
+	
+	//output first generation
+	ofstream firstfile;
+	firstfile.open ("first.txt");
+	for(i=0; i<100; i++){
+		firstfile << "\n";
+		for(j=0; j<100; j++){
+			firstfile << phase0[i][j];
+		}
+	}
+	firstfile.close();
+	
+	//simulation------------------------------------------------------------------------------------
+	//check number of living neighbor cells
+	for(i=0; i<=generations; i++){//simulate X generations
+		for(row=1; row<100; row++){//row increment
+			for(col=1; col<100; col++){//col increment
+				int total=	phase0[row-1][col-1]+phase0[row-1][col]	+phase0[row-1][col+1]+
+							phase0[row][col-1]	+phase0[row][col]	+phase0[row][col+1]+
+							phase0[row+1][col-1]+phase0[row+1][col]	+phase0[row+1][col+1];
+				//compare total to the 4 laws
+				if(total < 2){phase1[row][col]=0;}//first law
+				else if(total ==(2||3)){phase1[row][col]=1;}//second law
+				else if(total > 3){phase1[row][col]=0;}//third law
+				else if((phase0[row][col]==0)&&(total==3)){phase1[row][col]=1;}//fourth law
+			}
+		}
+		//move phase1 back into phase0
+		for(i=0; i<100; i++){for(j=0; j<100; j++){phase0[i][j]=phase1[i][j];}}
+				
+		//wipe phase1
+		for(row = 0; row<100; row++){for(col = 0; col<100; col++){phase1[row][col]=0;}}
+	}
+	// end of simulation----------------------------------------------------------------------------------------
+	
+	//output last file
+	ofstream endfile;
+	endfile.open ("last.txt");
+	for(i=0; i<100; i++){
+		endfile << "\n";
+		for(j=0; j<100; j++){
+			endfile << phase0[i][j];
+		}
+	}
+	endfile.close();
+}//end of main
